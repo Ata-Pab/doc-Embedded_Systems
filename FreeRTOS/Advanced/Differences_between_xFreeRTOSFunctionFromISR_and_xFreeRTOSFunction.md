@@ -376,10 +376,6 @@ So, FreeRTOS needs a way to say:
 
 That’s exactly what `portYIELD_FROM_ISR()` (or sometimes `portEND_SWITCHING_ISR()`) does.
 
----
-
-## ⚙️ 2. What `portYIELD_FROM_ISR()` actually does
-
 ### Conceptually:
 
 It **requests a context switch** *after* the ISR exits.
@@ -437,7 +433,7 @@ Let’s say a GPIO interrupt wakes a higher-priority task:
 
 ---
 
-## 🧠 3. Summary (Concept + Hardware Action)
+## 🧠 2. Summary (Concept + Hardware Action)
 
 | Step | Description                                                  | Happens in        |
 | ---- | ------------------------------------------------------------ | ----------------- |
@@ -450,7 +446,7 @@ Let’s say a GPIO interrupt wakes a higher-priority task:
 
 ---
 
-## 🔎 4. Why this mechanism matters
+## 🔎 3. Why this mechanism matters
 
 Without `portYIELD_FROM_ISR()`, the ISR would finish, and the scheduler wouldn’t know a new task is ready until the **next tick interrupt** (typically every 1 ms).
 That adds **unnecessary latency** — your high-priority task might start 1 ms late.
@@ -463,7 +459,7 @@ That’s why it’s a **real-time critical optimization**.
 
 ---
 
-## ⚡ 5. Visual Timeline
+## ⚡ 4. Visual Timeline
 
 ```
    Time →
@@ -485,7 +481,7 @@ That’s why it’s a **real-time critical optimization**.
 
 ---
 
-## ✅ 6. TL;DR
+## ✅ 5. TL;DR
 
 | Item                           | Description                                                              |
 | ------------------------------ | ------------------------------------------------------------------------ |
