@@ -8,6 +8,7 @@
 - UART Protocol for data transfer reliability ✅
 - Learn modern PWM Techniques ✅
 - FreeRTOS basics ✅
+- CMake Basics
 
 =========== Optional TODO ===========
 
