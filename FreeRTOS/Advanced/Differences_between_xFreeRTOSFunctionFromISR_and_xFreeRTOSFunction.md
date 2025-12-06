@@ -1,17 +1,21 @@
-## 🧩 **1. Context of Execution**
+# Differences between xFreeRTOSFunctionFromISR and xFreeRTOSFunction
+
+## Context of Execution: Task vs Interrupt (ISR)
+
+When working with FreeRTOS, it's crucial to understand the context in which your code is executing. FreeRTOS provides two sets of APIs for interacting with kernel objects like semaphores, queues, and task notifications:
 
 | Context     | Standard API (`xSemaphoreGive`)                            | ISR API (`xSemaphoreGiveFromISR`)                                      |
 | ----------- | ---------------------------------------------------------- | ---------------------------------------------------------------------- |
 | **Used in** | **Task context** (normal code running under the scheduler) | **Interrupt context (ISR)**                                            |
 | **Purpose** | Used when a task interacts with the kernel                 | Used when an interrupt service routine (ISR) interacts with the kernel |
 
-✅ **Rule:**
+**Rule:**
 Use `x[Function]FromISR` **only** inside interrupt service routines.
 Use the normal `x[Function]` **only** in tasks (never inside ISRs).
 
 ---
 
-## ⚙️ **2. Scheduler and Critical Section Handling**
+## Scheduler and Critical Section Handling
 
 * **Task-level APIs** (like `xSemaphoreGive`) may:
 
@@ -27,7 +31,7 @@ Use the normal `x[Function]` **only** in tasks (never inside ISRs).
 
 ---
 
-## 🧠 **3. Deferred Context Switching**
+## Deferred Context Switching
 
 When you use a `FromISR` function (like `xSemaphoreGiveFromISR`), you often see an additional parameter:
 
@@ -49,20 +53,20 @@ This mechanism keeps ISRs short and avoids mid-interrupt context changes.
 
 ---
 
-## 🧩 **4. Blocking vs Non-blocking Behavior**
+## Blocking vs Non-blocking Behavior
 
 | Behavior                 | Standard API                                        | FromISR API      |
 | ------------------------ | --------------------------------------------------- | ---------------- |
-| **Can block?**           | ✅ Yes (some can, e.g., `xQueueSend()` with timeout) | ❌ No             |
-| **Returns immediately?** | Not always (depends on timeout)                     | Always immediate |
+| Can block?           | ✓ Yes  | ❌ No             |
+| Returns immediately? | Not always (depends on timeout)                     | Always immediate |
 
 Blocking calls in an ISR would **lock up the CPU**, so all FromISR functions are strictly **non-blocking**.
 
 ---
 
-## ⚡ **5. Examples**
+## Examples
 
-### ✅ Inside a Task
+### Inside a Task
 
 ```c
 void vTask(void *pvParameters)
@@ -74,7 +78,7 @@ void vTask(void *pvParameters)
 }
 ```
 
-### ✅ Inside an ISR
+### Inside an ISR
 
 ```c
 void IRAM_ATTR gpio_isr_handler(void *arg)
@@ -87,7 +91,7 @@ void IRAM_ATTR gpio_isr_handler(void *arg)
 
 ---
 
-## 🚫 **6. What Happens if You Mix Them Up**
+## What Happens if You Mix Them Up
 
 | Mistake                                      | Consequence                                                                                          |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -96,7 +100,7 @@ void IRAM_ATTR gpio_isr_handler(void *arg)
 
 ---
 
-## 🧭 **7. General Rule of Thumb**
+## General Rule of Thumb
 
 | Situation                  | Use                                                                          |
 | -------------------------- | ---------------------------------------------------------------------------- |
@@ -105,7 +109,7 @@ void IRAM_ATTR gpio_isr_handler(void *arg)
 
 ---
 
-## ✅ **Summary Table**
+## Summary Table
 
 | Feature                         | `xFunction`        | `xFunctionFromISR`                  |
 | ------------------------------- | ------------------ | ----------------------------------- |
@@ -117,7 +121,7 @@ void IRAM_ATTR gpio_isr_handler(void *arg)
 
 ---
 
-## 🧠 **1. What does "Blocking" mean**
+## What does "Blocking" mean?
 
 When we say a task “blocks,” we mean:
 
@@ -146,7 +150,7 @@ So — the task is not *actively running*; it’s **sleeping** until the conditi
 
 ---
 
-### ⏰ Another example with timeout:
+### Another example with timeout:
 
 ```c
 xSemaphoreTake(xSemaphore, pdMS_TO_TICKS(100));
@@ -157,14 +161,10 @@ If no one gives it within that time, wake me up and continue.”
 
 ---
 
-### 💬 In short:
+**In short** “Blocking” means “The task pauses execution until a condition or timeout occurs.” 
 
-| “Blocking” means | “The task pauses execution until a condition or timeout occurs.” |
-| ---------------- | ---------------------------------------------------------------- |
 
----
-
-## ⚡ **2. ISRs can never block**
+## ISRs can never block
 
 Interrupt Service Routines (ISRs) are meant to be:
 
@@ -182,7 +182,7 @@ So, the ISR version (`xSemaphoreGiveFromISR`) is designed to **always return imm
 
 ---
 
-## 🧩 **3. “Blocking” vs “Preemption” — your confusion cleared**
+## “Blocking” vs “Preemption” — your confusion cleared
 
 You mentioned:
 
@@ -199,7 +199,7 @@ Let’s separate them clearly:
 
 ---
 
-### 🔹 Example: Blocking
+### Example: `Blocking`
 
 ```c
 xQueueReceive(xQueue, &data, portMAX_DELAY);
@@ -209,7 +209,7 @@ xQueueReceive(xQueue, &data, portMAX_DELAY);
 
 ---
 
-### 🔹 Example: Preemption
+### Example: `Preemption`
 
 If a higher-priority task becomes ready (maybe an ISR gives a semaphore),
 → FreeRTOS **suspends the current task immediately** and switches to the higher-priority one.
@@ -218,28 +218,28 @@ The first task didn’t choose to stop — it was preempted.
 
 ---
 
-## 🚦 **4. Analogy: Traffic**
+## Analogy: Traffic
 
-* **Blocking:**
+* `Blocking`:
   You’re waiting at a red light — voluntarily stopped, engine on but not moving.
   (You’ll move when the light turns green.)
 
-* **Preemption:**
+* `Preemption`:
   A police car (high priority) cuts in and takes the lane — you didn’t choose to stop, you were forced to yield.
 
 ---
 
-## ✅ **Summary**
+## Summary
 
 | Concept                   | Applies to      | Who initiates    | What happens                                          |
 | ------------------------- | --------------- | ---------------- | ----------------------------------------------------- |
-| **Blocking**              | Tasks only      | Task voluntarily | Task sleeps until condition or timeout                |
-| **Preemption**            | Tasks only      | Scheduler        | Task is paused because a higher-priority one is ready |
-| **ISR FromISR functions** | Interrupts only | Immediate return | Never blocks — always returns right away              |
+| `Blocking`              | Tasks only      | Task voluntarily | Task sleeps until condition or timeout                |
+| `Preemption`            | Tasks only      | Scheduler        | Task is paused because a higher-priority one is ready |
+| `ISR FromISR functions` | Interrupts only | Immediate return | Never blocks — always returns right away              |
 
 ---
 
-## 🧩 1. Are ISRs task in FreeRTOS?
+## Are ISRs task in FreeRTOS?
 
 Interrupts are:
 
@@ -251,7 +251,7 @@ They are like “bare-metal functions” that *temporarily interrupt* whatever F
 
 ---
 
-## ⚙️ 2. Why can’t ISRs “block”? (Even though you already know the reason)
+## Why can’t ISRs “block”? (Even though you already know the reason)
 
 Because blocking means *yielding control back to the scheduler* until a condition is met.
 
@@ -266,7 +266,7 @@ If it tried to, the CPU would simply freeze inside the interrupt — deadlock.
 
 ---
 
-## ⚡ 3. Then why do we need “non-blocking” versions (`x...FromISR`)?
+## Then why do we need “non-blocking” versions (`x...FromISR`)?
 
 Because while *the ISR itself* cannot block, the **functions it calls** (like `xSemaphoreGive`, `xQueueSend`, etc.) *could*, if they were designed for task context.
 
@@ -293,11 +293,11 @@ But inside an ISR:
 * You can’t context switch mid-interrupt,
 * And the function’s critical sections (enter/exit) are not safe for ISR-level calls.
 
-➡️ So calling `xQueueSend()` in an ISR **would corrupt the kernel or crash**.
+> So calling `xQueueSend()` in an ISR **would corrupt the kernel or crash**.
 
 ---
 
-### ✅ Solution: “FromISR” functions
+### Solution: “FromISR” functions
 
 FreeRTOS provides **special versions** of those functions (e.g. `xQueueSendFromISR`, `xSemaphoreGiveFromISR`) that:
 
@@ -318,7 +318,7 @@ This allows the ISR to **signal** a task safely and let the scheduler decide to 
 
 ---
 
-## 🔒 4. Does FreeRTOS "manipulate" ISRs?
+## Does FreeRTOS "manipulate" ISRs?
 
 No — it **does not manage** ISRs like it does tasks.
 But it **coordinates with them** through those `FromISR` APIs.
@@ -330,13 +330,13 @@ FreeRTOS doesn’t “control” your ISR — it just provides safe mechanisms f
 
 ---
 
-## 📘 5. Summary Table
+## Summary
 
 | Concept                          | Task Context                            | ISR Context                            |
 | -------------------------------- | --------------------------------------- | -------------------------------------- |
 | Who runs it?                     | FreeRTOS scheduler                      | Hardware interrupt                     |
-| Can it block?                    | ✅ Yes                                   | ❌ No                                   |
-| Can it use normal FreeRTOS APIs? | ✅ Yes                                   | ❌ No (must use FromISR versions)       |
+| Can it block?                    | ✓ Yes                                   | ❌ No                                   |
+| Can it use normal FreeRTOS APIs? | ✓ Yes                                   | ❌ No (must use FromISR versions)       |
 | Who handles context switching?   | FreeRTOS kernel                         | Hardware + `portYIELD_FROM_ISR()` hint |
 | Can FreeRTOS “manipulate” it?    | Fully managed (stack, priority, timing) | Only interacts via safe APIs           |
 
@@ -359,7 +359,7 @@ it’s about **preventing you from accidentally using blocking kernel APIs insid
 
 ---
 
-## 🧩 1. What does `portYIELD_FROM_ISR()` exactly do?
+## What does `portYIELD_FROM_ISR()` exactly do?
 
 When an ISR runs and wakes up (unblocks) a **higher-priority task** using something like:
 
@@ -406,7 +406,7 @@ PendSV runs at the **lowest interrupt priority**, so it executes after all activ
 
 ---
 
-### 🧠 Sequence of Events
+### Sequence of Events
 
 Let’s say a GPIO interrupt wakes a higher-priority task:
 
@@ -429,11 +429,11 @@ Let’s say a GPIO interrupt wakes a higher-priority task:
 6. When all ISRs complete, the CPU notices PendSV pending and runs the **context switch handler**.
 7. FreeRTOS swaps the running task context and starts executing the newly unblocked higher-priority task.
 
-✅ Result: the higher-priority task runs **immediately after the ISR** — no unnecessary delay.
+✓ Result: the higher-priority task runs **immediately after the ISR** — no unnecessary delay.
 
 ---
 
-## 🧠 2. Summary (Concept + Hardware Action)
+## Summary (Concept + Hardware Action)
 
 | Step | Description                                                  | Happens in        |
 | ---- | ------------------------------------------------------------ | ----------------- |
@@ -446,7 +446,7 @@ Let’s say a GPIO interrupt wakes a higher-priority task:
 
 ---
 
-## 🔎 3. Why this mechanism matters
+## Why this mechanism matters?
 
 Without `portYIELD_FROM_ISR()`, the ISR would finish, and the scheduler wouldn’t know a new task is ready until the **next tick interrupt** (typically every 1 ms).
 That adds **unnecessary latency** — your high-priority task might start 1 ms late.
@@ -459,7 +459,7 @@ That’s why it’s a **real-time critical optimization**.
 
 ---
 
-## ⚡ 4. Visual Timeline
+## Visual Timeline
 
 ```
    Time →
@@ -480,8 +480,6 @@ That’s why it’s a **real-time critical optimization**.
 ```
 
 ---
-
-## ✅ 5. TL;DR
 
 | Item                           | Description                                                              |
 | ------------------------------ | ------------------------------------------------------------------------ |
