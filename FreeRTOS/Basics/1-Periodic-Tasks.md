@@ -1,4 +1,4 @@
-## 🧩 *Periodic Tasks Demo*
+# Periodic Tasks Demo
 
 We’ll use:
 
@@ -8,9 +8,7 @@ We’ll use:
 
 ---
 
-### ✅ Full Example Code (`main.c`)
-
-Paste this into your project (replacing your previous main content):
+### Example Code (`main.c`)
 
 ```c
 #include "FreeRTOS.h"
@@ -114,7 +112,7 @@ void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer,
 
 ---
 
-### 🧠 Key Concept — `vTaskDelay()` vs `vTaskDelayUntil()`
+### Key Concept — `vTaskDelay()` vs `vTaskDelayUntil()`
 
 | Function                                  | Use Case                                      | Timing Accuracy          |
 | ----------------------------------------- | --------------------------------------------- | ------------------------ |
@@ -126,7 +124,7 @@ void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer,
 
 ---
 
-### 🧭 Expected Console Output
+### Console Output
 
 ```
 FreeRTOS Periodic Tasks Demo starting...
@@ -143,7 +141,7 @@ Notice how the **fast task prints 5 times for every slow task print** — this s
 
 ---
 
-### ⚙️ Try Experiments
+### Try Experiments
 
 Once it runs:
 
@@ -159,7 +157,7 @@ Once it runs:
 
 ---
 
-### 🧠 Concept Takeaway
+### Concept Takeaway
 
 * Every RTOS task is *just a function with a loop*.
 * The scheduler runs each task based on **priority + timing**.
@@ -167,7 +165,7 @@ Once it runs:
 
 ---
 
-## 🕒 1. Both are “delay” functions — but they work **very differently**
+## Both are “delay” functions — but they work **very differently**
 
 | Function                | Description                                                                                          | Use Case                              |
 | ----------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------- |
@@ -176,7 +174,7 @@ Once it runs:
 
 ---
 
-## 📘 2. `vTaskDelay()`: **Relative delay**
+## `vTaskDelay()`: **Relative delay**
 
 ```c
 void vTaskDelay(const TickType_t xTicksToDelay);
@@ -202,18 +200,18 @@ void vTaskFanControl(void *pvParams)
 Here, each loop actually takes **120ms total** (≈20ms work + 100ms delay).
 If the work time changes, the total period changes → **non-deterministic** loop timing.
 
-✅ Pros:
+**Pros**:
 
 * Simple
 * Good for one-shot or event-driven tasks
 
-❌ Cons:
+**Cons**:
 
 * Not good for **precise periodic** tasks
 
 ---
 
-## 📗 3. `vTaskDelayUntil()`: **Absolute periodic delay**
+## `vTaskDelayUntil()`: **Absolute periodic delay**
 
 ```c
 void vTaskDelayUntil(TickType_t *pxPreviousWakeTime, const TickType_t xTimeIncrement);
@@ -241,19 +239,19 @@ void vTaskCompressorControl(void *pvParams)
 Now, even if `ControlCompressor()` takes a variable amount of time (say 10ms or 25ms),
 the task **still runs every 100ms**, as measured in system ticks — **no drift**.
 
-✅ Pros:
+**Pros**:
 
 * Precise periodic timing
 * Ideal for control loops, sensor sampling, and PID updates
 
-❌ Cons:
+**Cons**:
 
 * Slightly more code
 * If task overruns (takes longer than period), it will wake up immediately next time (no catch-up mechanism)
 
 ---
 
-## 🧮 4. Visual Comparison
+## Visual Comparison
 
 **Using `vTaskDelay(100)`**
 
@@ -271,17 +269,17 @@ Fixed period = 100ms
 
 ---
 
-## 💡 5. Rule of thumb
+## Rule of thumb
 
 | Situation                                    | Recommended Function                                         |
 | -------------------------------------------- | ------------------------------------------------------------ |
-| Periodic control loop                        | ✅ `vTaskDelayUntil()`                                        |
-| Non-periodic background or event-driven task | ✅ `vTaskDelay()`                                             |
+| Periodic control loop                        | `vTaskDelayUntil()`                                        |
+| Non-periodic background or event-driven task | `vTaskDelay()`                                             |
 | Wait for next message/event indefinitely     | `xQueueReceive()` or `ulTaskNotifyTake()` (instead of delay) |
 
 ---
 
-## ✅ Summary
+## Summary
 
 | Feature         | `vTaskDelay()`              | `vTaskDelayUntil()`                     |
 | --------------- | --------------------------- | --------------------------------------- |
@@ -291,15 +289,3 @@ Fixed period = 100ms
 | Risk            | Timing drift                | Possible overrun if work > period       |
 
 ---
-
-### 🔧 In your refrigerator project
-
-For tasks like:
-
-* Fan control (every 100ms)
-* Compressor control (every 200ms)
-* PI Cooling control (every 500ms)
-
-👉 Use **`vTaskDelayUntil()`** — ensures constant loop period (essential for stable control).
-For slower tasks like defrost or diagnostics that aren’t periodic, use `vTaskDelay()` or software timers.
-
