@@ -1,4 +1,4 @@
-## 🧠 Software Timers and Deferred Execution
+## Software Timers and Deferred Execution
 
 This topic builds on what you already know — but takes a different angle.
 
@@ -7,8 +7,6 @@ While tasks can use `vTaskDelay()` or `vTaskDelayUntil()` for periodic behavior,
 * Lightweight kernel-managed timers that **don’t require a dedicated task**.
 * Ideal for **deferred execution**, **timeouts**, or **non-critical periodic functions**.
 * Often used instead of spawning a new task (saving stack memory and context-switch overhead).
-
----
 
 ### When to Use Software Timers
 
@@ -21,7 +19,7 @@ While tasks can use `vTaskDelay()` or `vTaskDelayUntil()` for periodic behavior,
 
 ---
 
-### 🔧 How They Work
+### How They Work
 
 FreeRTOS has a **Timer Service Task** (created automatically when you use any timer).
 Each timer has:
@@ -32,9 +30,8 @@ Each timer has:
 
 Timers are created using `xTimerCreate()`, started with `xTimerStart()`, and run in the **context of the Timer Service Task** (not your application task).
 
----
 
-### 💡 Example — One-Shot and Auto-Reload Timers
+### One-Shot and Auto-Reload Timers
 
 ```c
 #include "FreeRTOS.h"
@@ -97,9 +94,7 @@ int main(void)
 }
 ```
 
----
-
-### 🧾 Output Example
+### Output Example
 
 ```
 Starting timers...
@@ -116,15 +111,14 @@ Stopping auto-reload timer.
 
 ---
 
-### ⚙️ Notes
+### Notes
 
 * **Timer callbacks** execute in **Timer Service Task context**, not your main task.
 * Don’t block or call long operations inside a callback — it affects *all* timers.
 * Timers are often used for **deferred ISR work** (instead of waking a separate task).
 
----
 
-## 🧠 1. FreeRTOS Software Timers vs STM32 Hardware Timers
+## FreeRTOS Software Timers vs STM32 Hardware Timers
 
 FreeRTOS **software timers** are completely different from **STM32 hardware timers**.
 
@@ -140,11 +134,11 @@ So — **you don’t need to configure any STM32 timer peripheral** for FreeRTOS
 
 ---
 
-## ⚙️ 2. What *is* Required to Make FreeRTOS Timers Work
+## What *is* Required to Make FreeRTOS Timers Work
 
 There are **two** key requirements:
 
-### ✅ a) The RTOS tick must be configured and running
+### a) The RTOS tick must be configured and running
 
 This is handled automatically when:
 
@@ -164,7 +158,7 @@ You can check this in your `FreeRTOSConfig.h`:
 
 ---
 
-### ✅ b) You must start the timer service by calling:
+### b) You must start the timer service by calling:
 
 ```c
 vTaskStartScheduler();
@@ -175,9 +169,7 @@ Once the scheduler starts:
 * The **timer service task** is created internally.
 * It processes all pending software timer events.
 
----
-
-## 🧩 3. STM32CubeMX Setup Example
+## STM32CubeMX Setup Example
 
 If you’re using STM32CubeMX:
 
@@ -195,7 +187,7 @@ You **don’t** need to configure any hardware timer unless:
 
 ---
 
-## 💡 4. STM32 Hardware Timer + FreeRTOS Example (Optional Integration)
+## STM32 Hardware Timer + FreeRTOS Example (Optional Integration)
 
 If you *do* want to use an STM32 timer alongside FreeRTOS, it works independently.
 
@@ -222,16 +214,14 @@ HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 
 This **does not** interact with FreeRTOS timers — both systems run concurrently.
 
+## Summary
+
+| Requirement                          | Needed for FreeRTOS timers?  |
+| ------------------------------------ | ---------------------------  |
+| SysTick configured                   | ✓ Yes                        |
+| `configUSE_TIMERS` enabled           | ✓ Yes                        |
+| Timer service task created           | ✓ Automatically              |
+| STM32 TIMx hardware timer configured | ❌ Not needed                | 
+| `vTaskStartScheduler()` called       | ✓ Must be called             |
+
 ---
-
-## 🧭 Summary
-
-| Requirement                          | Needed for FreeRTOS timers? |
-| ------------------------------------ | --------------------------- |
-| SysTick configured                   | ✅ Yes                       |
-| `configUSE_TIMERS` enabled           | ✅ Yes                       |
-| Timer service task created           | ✅ Automatically             |
-| STM32 TIMx hardware timer configured | ❌ Not needed                |
-| `vTaskStartScheduler()` called       | ✅ Must be called            |
-
-

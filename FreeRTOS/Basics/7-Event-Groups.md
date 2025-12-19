@@ -1,4 +1,4 @@
-## 🧠 What Is an Event Group?
+## What Is an Event Group?
 
 An **Event Group** (or **Event Flags**) is essentially a **collection of bits**, each representing a *distinct event or state flag* in your system.
 You can think of it as a **bitfield shared among tasks**, managed by the kernel.
@@ -8,23 +8,21 @@ Each bit = 0 → means event not yet occurred
 
 ---
 
-### 🧩 Example Use Case (real-world style)
+### Example Use Case (real-world style)
 
-Let’s imagine a **Smart Refrigerator** control system (😉 relevant to your field):
+Let’s imagine a **Smart Refrigerator** control system:
 
 We have a **Controller Task** that can only start system operation when:
 
-1. Temperature Sensor is initialized ✅
-2. Fan is ready ✅
-3. Compressor is ready ✅
+1. Temperature Sensor is initialized ✓
+2. Fan is ready ✓
+3. Compressor is ready ✓
 
 Each of these initializations occurs in a different task or interrupt, and once they’re all complete, the controller can proceed.
 
 This is a *perfect* use case for **Event Groups**.
 
----
-
-## ⚙️ Key FreeRTOS API Functions
+## Key FreeRTOS API Functions
 
 | Function                 | Description                            |
 | ------------------------ | -------------------------------------- |
@@ -34,9 +32,7 @@ This is a *perfect* use case for **Event Groups**.
 | `xEventGroupWaitBits()`  | Wait for one or more bits to be set    |
 | `xEventGroupGetBits()`   | Read current bits                      |
 
----
-
-## 💡 Code Example — Multi-Event Synchronization
+## Multi-Event Synchronization
 
 ```c
 #include "FreeRTOS.h"
@@ -71,7 +67,7 @@ void vControllerTask(void *pv)
 
     if ((xResultBits & xBitsToWaitFor) == xBitsToWaitFor)
     {
-        printf("✅ All subsystems ready. Starting control loop...\n");
+        printf("✓ All subsystems ready. Starting control loop...\n");
     }
 
     for (;;)
@@ -122,33 +118,27 @@ int main(void)
 }
 ```
 
----
-
-### 🧾 Output
+### Output
 
 ```
 Controller waiting for all subsystems...
 Temperature sensor initialized.
 Fan system initialized.
 Compressor initialized.
-✅ All subsystems ready. Starting control loop...
+✓ All subsystems ready. Starting control loop...
 Controller running system control...
 Controller running system control...
 ...
 ```
 
----
-
-## ⚙️ Notes
+## Notes
 
 * You can wait for **any bit** (`pdFALSE`) or **all bits** (`pdTRUE`).
 * Multiple tasks can set or wait on the same event group.
 * Bits can also be cleared automatically after waiting (by setting `xClearOnExit = pdTRUE`).
 * Event groups are *not interrupt-safe*. From ISRs, use **Direct-to-Task Notifications** instead.
 
----
-
-## ⚙️ Scenario — “System Initialization & Ready Notification”
+## Scenario — “System Initialization & Ready Notification”
 
 We’ll simulate a simplified **embedded device startup** with the following:
 
@@ -160,9 +150,7 @@ We’ll simulate a simplified **embedded device startup** with the following:
 * When *all are ready*, controller sets a **SYSTEM_READY** bit.
 * Then, **UI Task** waits for this SYSTEM_READY flag to start working.
 
----
-
-## 💡 Code Example
+## Code Example
 
 ```c
 #include "FreeRTOS.h"
@@ -221,7 +209,7 @@ void vSystemControllerTask(void *pv)
         pdTRUE,    // Wait for all bits
         portMAX_DELAY);
 
-    printf("✅ All subsystems ready. System is starting...\n");
+    printf("✓ All subsystems ready. System is starting...\n");
 
     /* Signal to other tasks that the system is fully ready */
     xEventGroupSetBits(xSystemEvents, BIT_SYSTEM_READY);
@@ -273,9 +261,7 @@ int main(void)
 }
 ```
 
----
-
-## 🧾 Expected Output
+## Expected Output
 
 ```
 System Controller waiting for all subsystems...
@@ -283,7 +269,7 @@ UI Task waiting for SYSTEM_READY flag...
 Sensor initialized.
 Display module initialized.
 Communication module initialized.
-✅ All subsystems ready. System is starting...
+✓ All subsystems ready. System is starting...
 UI Task started. System is ready!
 Controller performing system-level monitoring...
 UI updating display...
@@ -292,9 +278,7 @@ UI updating display...
 ...
 ```
 
----
-
-## 🧠 Key Takeaways
+## Key Takeaways
 
 | Concept                                                                                                                          | Meaning |
 | -------------------------------------------------------------------------------------------------------------------------------- | ------- |
@@ -303,3 +287,4 @@ UI updating display...
 | Useful for **initialization sequencing**, **network connection states**, or **multi-component readiness**.                       |         |
 | Unlike semaphores, **bits remain set** until explicitly cleared. This makes event groups great for *persistent state signaling*. |         |
 
+---

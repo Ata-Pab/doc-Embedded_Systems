@@ -1,11 +1,4 @@
-Perfect — now we step into one of the most *essential* FreeRTOS concepts for writing robust multitasking code:
-👉 **Mutexes (Mutual Exclusion Objects)**
-
-They look similar to semaphores at first glance — but their purpose and behavior are quite different once you understand the details.
-
----
-
-## 🧩 1. What is a Mutex?
+## What is a Mutex?
 
 A **Mutex** (short for *mutual exclusion*) is used to **protect shared resources** — such as:
 
@@ -16,27 +9,21 @@ A **Mutex** (short for *mutual exclusion*) is used to **protect shared resources
 
 It ensures **only one task** at a time can access that resource.
 
----
-
-## ⚙️ 2. How Mutex Works
+## How Mutex Works
 
 Internally, a Mutex is like a **binary semaphore**, but with a few key differences:
 
 | Feature              | Binary Semaphore        | Mutex                               |
 | -------------------- | ----------------------- | ----------------------------------- |
 | Ownership            | No concept of ownership | The task that takes it *owns* it    |
-| Priority Inheritance | ❌ No                    | ✅ Yes — prevents priority inversion |
+| Priority Inheritance | ❌ No                    | ✓ Yes — prevents priority inversion |
 | Typical Use          | Event signaling         | Protecting critical sections        |
-| Give/Take From ISR   | ✅ Yes                   | ❌ No (must use in tasks only)       |
+| Give/Take From ISR   | ✓ Yes                   | ❌ No (must use in tasks only)       |
 
----
-
-## 🧠 3. Real Example: Protecting UART (or printf)
+## Real Example: Protecting UART (or printf)
 
 Let’s say two tasks both print messages via UART or `printf`.
 Without a mutex, their messages can overlap or interleave (data corruption).
-
-### ✅ Example Code
 
 ```c
 #include "FreeRTOS.h"
@@ -97,7 +84,7 @@ int main(void)
 
 ---
 
-### 🧾 Expected Console Output:
+### Expected Console Output:
 
 ```
 Task 1 entering critical section...
@@ -112,9 +99,7 @@ Task 1 leaving critical section...
 Each task *waits* for the mutex before entering the critical section → no interleaved output.
 Only one task can access the shared resource (UART/console) at a time.
 
----
-
-## ⚖️ 4. Priority Inheritance (Why Mutex ≠ Binary Semaphore)
+## Priority Inheritance (Why Mutex ≠ Binary Semaphore)
 
 **Priority inversion** can occur when:
 
@@ -129,9 +114,7 @@ Mutexes solve this with **priority inheritance**:
 
 Binary semaphores do **not** provide this — they’re only counters.
 
----
-
-## 🔁 5. Real Embedded Example
+## Real Embedded Example
 
 | Scenario                      | Protected Resource | Why Mutex is used            |
 | ----------------------------- | ------------------ | ---------------------------- |
@@ -140,9 +123,7 @@ Binary semaphores do **not** provide this — they’re only counters.
 | Shared I²C peripheral         | I²C bus            | Prevent overlapping commands |
 | Updating shared global struct | Config/state data  | Prevent inconsistent reads   |
 
----
-
-## 🧩 6. Recursive Mutex (Special Case)
+## Recursive Mutex (Special Case)
 
 Sometimes, a task might need to **lock the same mutex multiple times** (e.g., nested function calls using the same resource).
 
@@ -158,25 +139,21 @@ Normal mutexes will *deadlock* if taken twice by the same task; recursive mutexe
 
 ---
 
-✅ **Summary:**
+**Summary:**
 
 | Mechanism          | Use for                        | ISR-safe | Priority Inheritance |
 | ------------------ | ------------------------------ | -------- | -------------------- |
-| Binary Semaphore   | Event signaling                | ✅        | ❌                    |
-| Counting Semaphore | Multiple identical resources   | ✅        | ❌                    |
-| Mutex              | Protecting shared resources    | ❌        | ✅                    |
-| Recursive Mutex    | Re-entrant resource protection | ❌        | ✅                    |
+| Binary Semaphore   | Event signaling                | ✓        | ❌                  |
+| Counting Semaphore | Multiple identical resources   | ✓        | ❌                  |
+| Mutex              | Protecting shared resources    | ❌       | ✓                   |
+| Recursive Mutex    | Re-entrant resource protection | ❌       | ✓                   |
 
----
-
-## 🧩 What Is a Recursive Mutex?
+## What Is a Recursive Mutex?
 
 A **Recursive Mutex** is a special type of mutex that allows **the same task** to lock the mutex **multiple times** without causing a deadlock.
 Each time the mutex is taken by the same task, an internal counter increments. The task must release (give) it **the same number of times** to fully unlock it.
 
----
-
-## 🔍 Why Do We Need Recursive Mutexes?
+## Why Do We Need Recursive Mutexes?
 
 In a large embedded codebase, it’s common for multiple functions to **call each other**, and each may try to acquire the same mutex to protect a shared resource (like I²C bus, SPI interface, or UART buffer).
 
@@ -188,9 +165,7 @@ With a recursive mutex:
 
 * The same task can safely re-enter sections protected by the same mutex.
 
----
-
-## ⚙️ Example — When to Use It
+## Example — When to Use It
 
 Imagine this:
 
@@ -205,22 +180,18 @@ and both functions lock the same mutex (`xEEPROM_Mutex`) to protect I2C access.
 Without recursive mutex → Deadlock!
 With recursive mutex → Works safely.
 
----
-
-## ✅ Pros
+## Pros
 
 * Prevents **deadlocks** in nested calls by the same task.
 * Simplifies API layering (each function can protect itself independently).
 
-## ⚠️ Cons
+## Cons
 
 * Slightly **more overhead** (counter management).
 * Can hide poor design — overuse may make code logic messy.
 * Should **not be shared across unrelated resources** (use regular mutexes then).
 
----
-
-## 💻 Real Embedded-Style Example
+## Real Embedded-Style Example
 
 Let’s simulate a **shared I2C bus** where multiple layers of functions try to write to EEPROM.
 
@@ -290,7 +261,7 @@ EEPROM write completed
 
 ---
 
-### 🔧 Explanation
+### Explanation
 
 * `WriteToEEPROM()` locks the mutex.
 * Then it calls `I2C_Write()` — which **tries to lock the same mutex again**.
@@ -298,3 +269,5 @@ EEPROM write completed
 * The counter increases internally, and both functions must “give” it back.
 
 If it were a **normal mutex**, the task would **deadlock** in `I2C_Write()`.
+
+---
