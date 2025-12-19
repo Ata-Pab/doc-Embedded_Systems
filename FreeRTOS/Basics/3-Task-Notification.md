@@ -1,10 +1,10 @@
-## 🧩 Task Notifications
+## Task Notifications
 
 — A *lightweight, fast alternative* to queues and semaphores for communication between tasks (or between an ISR and a task).
 
 ---
 
-## ⚙️ What Task Notifications Are
+### What Task Notifications Are
 
 Every **FreeRTOS task** automatically has a built-in *notification value* (like a private integer mailbox).
 This means **you don’t need to create a queue or semaphore** — the notification mechanism is already part of the TCB (Task Control Block).
@@ -22,7 +22,7 @@ Think of it as:
 
 ---
 
-## 🧱 Common Use Cases
+### Common Use Cases
 
 | Case                               | Example                                      | Mechanism                                     |
 | ---------------------------------- | -------------------------------------------- | --------------------------------------------- |
@@ -33,14 +33,12 @@ Think of it as:
 
 ---
 
-## 🧪 Practical Example — “Sensor → Logger” via Task Notifications
+## Practical Example — “Sensor → Logger” via Task Notifications
 
 We’ll create:
 
 * A **Sensor Task** that periodically produces temperature data.
 * A **Logger Task** that waits for notifications to log when new data is available.
-
-### 🧩 Code:
 
 ```c
 #include "FreeRTOS.h"
@@ -87,9 +85,7 @@ int main(void)
 }
 ```
 
----
-
-### 🧾 Example Output:
+### Output:
 
 ```
 [Sensor] Measured: 27.2°C
@@ -101,7 +97,7 @@ int main(void)
 
 ---
 
-## 🔍 Key Concepts
+### Key Concepts
 
 * `xTaskNotifyGive()` — sends a notification to a specific task (like signaling a semaphore).
 * `ulTaskNotifyTake(clearOnExit, timeout)` — waits for the notification (like taking from a semaphore).
@@ -110,7 +106,7 @@ int main(void)
 
 ---
 
-## ⚡ Variants
+## Variants
 
 | Function                                         | Purpose                                                         |
 | ------------------------------------------------ | --------------------------------------------------------------- |
@@ -122,13 +118,13 @@ int main(void)
 
 ---
 
-## 🧠 Comparison vs Queue
+## Comparison vs Queue
 
 | Feature     | Queue                               | Task Notification                     |
 | ----------- | ----------------------------------- | ------------------------------------- |
 | Memory      | Dynamic/static (needs allocation)   | Built-in (no extra memory)            |
 | Speed       | Slower                              | Very fast                             |
-| Many-to-one | ✅                                   | 🚫 (1-to-1 only)                      |
+| Many-to-one | ✓                                   | ❌ (1-to-1 only)                      |
 | Data Size   | Structs, any type                   | Usually int/bitmask                   |
 | Use Case    | Multi-producer, structured messages | ISR signals, simple data, sync events |
 
@@ -140,7 +136,7 @@ Let’s unpack that — because it’s one of the **most important nuances** of 
 
 ---
 
-## ⚙️ How Task Notifications Carry Information
+## How Task Notifications Carry Information
 
 There are actually **two categories** of FreeRTOS task notifications:
 
@@ -156,7 +152,7 @@ But if you want to distinguish between **multiple events**, you should switch to
 
 ---
 
-## 🧠 Example: Multiple Event Sources → One Task
+## Example: Multiple Event Sources → One Task
 
 Let’s imagine a **Parser Task** that may get data from:
 
@@ -176,7 +172,7 @@ Now, from each ISR or task, you “set” the appropriate bit using `xTaskNotify
 
 ---
 
-### 🧩 Code: Multi-Source Notifications Example
+### Multi-Source Notifications Example
 
 ```c
 #include "FreeRTOS.h"
@@ -236,9 +232,7 @@ int main(void)
 }
 ```
 
----
-
-### 🧾 Example Output (simulated sequence)
+### Example Output (simulated sequence)
 
 ```
 [Parser] Handling UART1 RX
@@ -248,7 +242,7 @@ int main(void)
 
 ---
 
-## 🧩 Explanation
+## Explanation
 
 * Each event sets one bit in the **task’s 32-bit notification value**.
 * `xTaskNotifyWait(clearOnEntryMask, clearOnExitMask, &value, timeout)` waits and retrieves these bits.
@@ -259,7 +253,7 @@ You can think of this like a **lightweight event flags group** (similar to `Even
 
 ---
 
-## 💡 Summary: Choosing the Right Notification Mode
+## Choosing the Right Notification Mode
 
 | Purpose                            | Use                                           | Example                     |
 | ---------------------------------- | --------------------------------------------- | --------------------------- |
@@ -267,4 +261,4 @@ You can think of this like a **lightweight event flags group** (similar to `Even
 | **Multiple event types (flags)**   | `xTaskNotify()` / `xTaskNotifyWait()`         | UART1, UART2, Timer         |
 | **Send integer data**              | `xTaskNotify()` with `eSetValueWithOverwrite` | Send ADC value, index, etc. |
 
-
+---

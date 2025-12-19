@@ -1,6 +1,6 @@
-### 🧩 Task Communication Using FreeRTOS Queues
+## Task Communication Using FreeRTOS Queues
 
-#### Concept Overview
+### Concept Overview
 
 * **Queues** in FreeRTOS allow tasks (or ISRs) to send and receive messages safely.
 * Each item in a queue is a fixed-size structure (can be integer, struct, etc.).
@@ -87,7 +87,7 @@ Consumer received: 3
 
 ---
 
-### 🔍 Key Points:
+### Key Points:
 
 * `xQueueCreate(5, sizeof(int))` → Queue can hold 5 integers.
 * `xQueueSend` → Adds an item; blocks if full.
@@ -96,7 +96,7 @@ Consumer received: 3
 
 ---
 
-## 🧭 Where Queues Are Used in Real Embedded Projects
+## Where Queues Are Used in Real Embedded Projects
 
 Here are some very typical examples — you’ll see this pattern across industrial, automotive, and appliance control firmware:
 
@@ -119,7 +119,7 @@ The queue transfers these events to a *System Manager Task*, which then updates 
 
 ---
 
-### 2. **Command and Data Passing**
+### 2. Command and Data Passing
 
 When a UI task or network task sends a *command* to another subsystem:
 
@@ -136,7 +136,7 @@ A queue between the **UI Task → Control Task** can deliver such messages safel
 
 ---
 
-### 3. **Sensor Data Pipeline**
+### 3. Sensor Data Pipeline
 
 Sensors running in interrupt-driven or periodic tasks post their measurements into a queue:
 
@@ -153,7 +153,7 @@ Another task (e.g. Logging or Display) reads these structs from the queue for fu
 
 ---
 
-### 4. **Interfacing Between ISR and Tasks**
+### 4. Interfacing Between ISR and Tasks
 
 Interrupt Service Routines (ISRs) use queues to *defer heavy work* to background tasks:
 
@@ -173,7 +173,7 @@ void EXTI_IRQHandler(void)
 
 ---
 
-## ⚙️ Practical Example — Passing Structs via Queue
+## Practical Example — Passing Structs via Queue
 
 Let’s create a realistic scenario — imagine you’re designing a **FreeRTOS-based refrigerator control system**, where a **Temperature Sensor Task** periodically reads data and sends it to a **Cooling Controller Task**.
 
@@ -250,7 +250,7 @@ int main(void)
 
 ---
 
-### 🧾 Output Example:
+### Output Example:
 
 ```
 [Sensor] Sent: Freezer=-18.0°C, Cooler=4.0°C
@@ -264,10 +264,11 @@ int main(void)
 
 ---
 
-### 🧠 Key Takeaways
+### Key Takeaways
 
 * Struct-based queues let you *encapsulate context-rich messages*.
 * Each task focuses only on its domain (separation of concerns).
 * It makes debugging, testing, and scalability much easier.
 * Queues guarantee thread-safe delivery — no shared-variable hazards.
 
+---

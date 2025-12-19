@@ -1,4 +1,4 @@
-## 🧩 1. What Is a Stream Buffer?
+## What Is a Stream Buffer?
 
 A **Stream Buffer** is a unidirectional byte stream between:
 
@@ -7,20 +7,17 @@ A **Stream Buffer** is a unidirectional byte stream between:
 
 It’s typically used when you need to send a variable number of bytes, not discrete messages.
 
-> ⚙️ Unlike a Queue, it doesn’t store item “slots” — it’s a circular buffer holding raw bytes.
+> Unlike a Queue, it doesn’t store item “slots” — it’s a circular buffer holding raw bytes.
 
----
-
-## ⚡ Common Real Use Case
+## Common Real Use Case
 
 **UART receive handling** is a *perfect* match:
 
 * The **UART RX ISR** writes incoming bytes into the stream buffer.
 * A **Parser Task** reads from the stream buffer, processes complete commands or frames.
 
----
 
-## 🧠 2. System Setup (Concept)
+## System Setup (Concept)
 
 | Component                | Description                                                               |
 | ------------------------ | ------------------------------------------------------------------------- |
@@ -28,11 +25,9 @@ It’s typically used when you need to send a variable number of bytes, not disc
 | **Parser Task**          | Reads bytes using `xStreamBufferReceive()` and parses                     |
 | **Stream Buffer Handle** | Shared object created before scheduler start                              |
 
----
+## UART RX Stream Buffer Demo
 
-## 🧩 3. Example – UART RX Stream Buffer Demo
-
-### 📂 Code Skeleton
+### Code Skeleton
 
 ```c
 #include "FreeRTOS.h"
@@ -118,9 +113,7 @@ void vParserTask(void *pvParameters)
 }
 ```
 
----
-
-## 📊 4. Behavior Summary
+## Behavior Summary
 
 | Scenario                | Behavior                                                        |
 | ----------------------- | --------------------------------------------------------------- |
@@ -129,21 +122,17 @@ void vParserTask(void *pvParameters)
 | Stream buffer full      | Oldest data overwritten (if implemented manually) or send fails |
 | No ISR data             | Task remains blocked (no CPU waste)                             |
 
----
-
-## 💡 5. Why Stream Buffer (vs Queue)?
+## Why Stream Buffer (vs Queue)?
 
 | Feature                       | Queue                       | Stream Buffer  |
 | ----------------------------- | --------------------------- | -------------- |
-| Stores discrete messages      | ✅                           | ❌              |
-| Stores continuous byte stream | ❌                           | ✅              |
-| Suitable for UART RX/TX       | ⚠️ possible but not optimal | ✅ Ideal        |
-| ISR safe                      | ✅                           | ✅              |
+| Stores discrete messages      | ✓                           | ❌              |
+| Stores continuous byte stream | ❌                           | ✓              |
+| Suitable for UART RX/TX       | ⚠️ possible but not optimal | ✓ Ideal        |
+| ISR safe                      | ✓                           | ✓              |
 | Memory efficient              | Medium                      | Very efficient |
 
----
-
-## 🧩 Real-World Example Context
+## Real-World Example Context
 
 A fridge controller or IoT board that communicates over UART with a diagnostic tool or Wi-Fi module:
 
